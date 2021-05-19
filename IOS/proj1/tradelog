@@ -1,0 +1,355 @@
+#!/bin/sh
+
+export POSIXLY_CORRECT=yes
+
+print_help()
+{
+    echo "Usage: [-h|--help] [FILTER] [COMMAND] [LOG [LOG2 [...]]"
+    echo "OPTIONS: 
+    "
+    echo "[FILTER]"
+    echo "-h | --help  -  Prints man page and exits program\n"
+    echo "-a DATETIME - Only transactions after DATETIME are evaluated\n"
+    echo "-b DATETIME - Only transactions before DATETIME are evaluated\n"
+    echo "-t TICKER - Only transactions with given TICKER are evaluated. If more than -t is used, we are thinking about every given TICKER\n"
+    echo "-w WIDTH - In the graph list, sets the width of the longest number to WIDTH 
+             WIDTH must be a positive integer and multiple occurences of -w results fault\n"
+    echo "[COMMAND]"
+    echo "list-tick - Prints list of all found stock exchange symbols, ie TICKERS\n"
+    echo "profit - Prints the total profit of all closed positions\n"
+    echo "pos - Prints values of current hold positions in a descending order\n"
+    echo "last-price - Prints last known price of every ticker\n"
+    echo "hist-ord - Prints histogram of number of transactions per ticker\n"
+    echo "graph-pos - Prints graph of values of hold positions per ticker\n"
+    
+}
+command_check()
+{
+    if [ "$1" = "" ]
+    then
+        return 0
+    else 
+        echo "Cannot process more than 1 COMMAND"
+        exit 1
+    fi
+}
+
+COMMAND=""
+TICKER=""
+AFTER_TIME=""
+BEFORE_TIME=""
+LOG_FILES=""
+GZIP_FILES=""
+LOG_FILES=""
+WIDTH=1000
+
+# Split program arguments - They can be given in a random order (points++(bonus solution))
+while [ $# -gt 0 ]
+do
+    case "$1" in
+    show-sort)
+        command_check "$COMMAND"
+        COMMAND="$1"
+        shift
+        ;; 
+    list-tick | pos)
+        command_check "$COMMAND"
+        COMMAND="$1"
+	    shift
+        ;;
+    profit)
+        command_check "$COMMAND"
+        COMMAND="$1"
+        shift
+        ;;
+    last-price)
+        command_check "$COMMAND"
+        COMMAND="$1"
+        shift
+        ;;
+    hist-ord)
+        command_check "$COMMAND"
+        COMMAND="$1"
+        shift
+        ;;
+    graph-pos)
+        command_check "$COMMAND"
+        COMMAND="$1"
+        shift
+        ;;    
+    -h)
+        print_help
+        exit 0
+        ;;
+    --help)
+        print_help
+        exit 0
+        ;;
+    -a)
+        AFTER_TIME="$2"
+        shift
+        shift
+        ;;
+    -b)
+        BEFORE_TIME="$2"
+        shift
+        shift
+        ;;
+    -t)
+        TICKER="$2|$TICKER"
+        shift
+        shift
+        ;;
+    -w)
+        WIDTH="$2"
+        shift
+        shift
+        ;;
+    *)
+        TEMP=$(echo "$1" | grep '.gz$')
+        if [ "$TEMP" != "" ]
+        then 
+            GZ_FILE="$1 $GZ_FILE"
+        else
+            LOG_FILES="$1 $LOG_FILES"
+        fi
+        shift
+        ;;
+    esac
+done
+
+ALL_INPUT_FILES=""
+if [ "$GZ_FILE" != "" ]
+then
+    ALL_INPUT_FILES="$GZ_FILE $LOG_FILES"
+else
+    ALL_INPUT_FILES="$LOG_FILES"
+fi
+INPUT=$(zcat -f $ALL_INPUT_FILES)
+
+if [ "$AFTER_TIME" != "" ]
+then
+    INPUT=`zcat -f $ALL_INPUT_FILES | sort -t ';' -k 1,1 | awk -F ';' -v after_time="$AFTER_TIME" '{if (\$1 > after_time) {print \$0}}'`
+fi
+
+if [ "$BEFORE_TIME" != "" ]
+then
+    INPUT=`zcat  -f $ALL_INPUT_FILES |  awk -F ';' -v before_time="$BEFORE_TIME" '{if (\$1 < before_time) {print \$0}}'`
+fi
+
+if [ "$TICKER" != "" ]
+then
+    INPUT=`zcat -f $ALL_INPUT_FILES |  awk -F ';' -v tickers=$TICKER '
+    BEGIN {end = split(tickers, arr, "|")}
+    {
+        for (i = 1; i <= end; i++){
+            if ($2==arr[i]){
+                printf("%s\n", $0)
+            }
+        }
+    }
+    '`
+fi
+
+# Print filtered input if no command is given
+if [ "$COMMAND" = "" ]
+then
+    echo "$INPUT"
+fi
+
+if [ "$COMMAND" = "profit" ]
+then
+    SUM=`echo "$INPUT" |  sort -t ';' -k 3,3  | awk -F ";" '{if ( $3=="buy" ) { sum-=($4 * $6) } else { sum+=($4 * $6) }} END  {printf("%.2f",sum)}'`
+    echo "$SUM"
+fi
+
+if [ "$COMMAND" = "list-tick" ]
+then
+    READ_INPUT=`echo "$INPUT" | sort -t ';' -u -k 2,2  | awk -F ';' '{print $2}'`
+    echo "$READ_INPUT"
+fi
+
+if [ "$COMMAND" = "pos" ]
+then
+    READ_INPUT=`echo "$INPUT" | sort -t ';' -k 2,2 | awk -F ';' '
+    BEGIN {previous_ticker=$2; sum=0.0;count=0;max_len=0}
+    {
+        if ( previous_ticker == $2 || count == 0 ) {
+            if ( $3 == "buy" ){sum+=($6)}
+            else {sum-=$6}
+            previous_ticker=$2
+            count++
+            price=$4
+        } 
+        else {
+            pos = sum*price
+            len = sprintf("%.2f", pos);
+            if (length(len) > max_len){
+                max_len= length(len)
+            }
+            arr[i++]=pos
+            arr_tick[j++]=previous_ticker
+            sum=0
+            if ( $3 == "buy"){sum+=$6}
+            else {sum-=$6}
+            previous_ticker=$2
+        }
+    }
+    END {
+        pos = sum * price
+        len = sprintf("%.2f", pos);
+        if (length(len) > max_len){
+                max_len = length(len)
+            }
+        arr[i++]=pos
+        arr_tick[j++]=previous_ticker
+        while ( i > 0 ){
+        --i
+        printf("%-9s : %*.2f\n", arr_tick[i], max_len, arr[i])
+        }
+    
+    }'`
+    OUTPUT=`echo "$READ_INPUT" | sort -t ':' -k 2,2 -n | awk '{arr[i++]=$0} END {while (i>0) print arr[--i] }'`
+    echo "$OUTPUT"
+fi    
+
+if [ "$COMMAND" = "last-price" ]
+then
+    READ_INPUT=`echo "$INPUT" | sort -t ';' -k 2,2 | awk -F ';' '
+    BEGIN {last=0;previous_ticker=$2; max_len=0; count=0}
+    {
+        if ( previous_ticker == $2 || count == 0 ) {
+            last=$4
+            count++
+        } 
+        else {
+            if (length(last) > max_len){
+                max_len=length(last)
+            }
+            arr[i++]=last
+            arr_tick[j++]=previous_ticker
+            last=$4
+            previous_ticker=$2
+        }
+    }
+    END {
+        if (length(last) > max_len){
+                max_len=length(last)
+            }
+        arr[i++]=last
+        arr_tick[j++]=previous_ticker
+        n=i
+        i=0
+        while ( i < n-1){
+        i++
+        printf("%-9s : %*.2f\n", arr_tick[i],max_len,arr[i])}
+        }'`
+    # Vyriesit problem so zarovnavanim!!!!!
+    echo "$READ_INPUT"
+    
+fi
+    
+if [ "$COMMAND" = "show-sort" ]
+then
+    SUM=`echo "$INPUT" | sort -t ';' -k 2,2 | awk -F ';' '{print $2,$6,$4,$3} END {printf("%s %s %.2f", $4, $6, \$4 * \$6) }'`
+    echo "$SUM"
+fi
+# READ_FILTER="eval $READ_INPUT | awk -F ';' 'if  (\$1 > $AFTER_TIME) {print \$0}' | eval $TICK_FILTER"
+
+if [ "$COMMAND" = "hist-ord" ]
+then
+    OUTPUT=`echo "$INPUT"  | sort -t ';' -k 2,2 | awk -F ';' '
+    BEGIN {sum=0;previous_ticker=$2}
+    {
+        if ( sum == 0 ){
+            previous_ticker=$2
+        }
+        if ( previous_ticker == $2 ) {
+            sum++
+        } 
+        else {
+            
+            printf("%-9s : ", previous_ticker)
+            while ( sum > 0){
+                printf("%s", "#")
+                 sum--
+            }
+            printf("\n")  
+            sum=1
+            previous_ticker=$2
+        }
+    }
+    END {   printf("%-9s : ", previous_ticker) 
+    while ( sum > 0){
+                printf("%s", "#")
+                 sum--
+            }
+    }'`
+    echo "$OUTPUT"
+fi
+
+
+if [ "$COMMAND" = "graph-pos" ]
+then
+    READ_INPUT=`echo "$INPUT" | sort -t ";" -k 2,2 | awk -F ';' -v width="$WIDTH"  '
+    BEGIN {previous_ticker=$2; sum=0.0;count=0;max=0}
+    {
+        if ( previous_ticker == $2 || count == 0 ) {
+            if ( $3 == "buy" ){sum+=($6)}
+            else {sum-=$6}
+            previous_ticker=$2
+            count++
+            price=$4
+        } 
+        else {
+            pos=sum*price
+            if ((pos > 0 ? pos : pos * (-1)) > max){
+                max=(pos > 0 ? pos : pos * (-1))
+            }
+            arr_tick[i++]=previous_ticker
+            arr_pos[j++]=pos
+            sum=0
+            if ( $3 == "buy"){sum+=$6}
+            else {sum-=$6}
+            previous_ticker=$2
+        }
+    }
+    END {
+        pos=sum*price
+        if ((pos > 0 ? pos : pos * (-1)) > max){
+                max=(pos > 0 ? pos : pos * (-1))
+            }
+        arr_tick[i++]=previous_ticker
+        arr_pos[j++]=pos
+        max_del = max/width
+        while (i > 0){
+            --i
+            num_of_char=arr_pos[i]/max_del
+            if ( num_of_char < 1 && num_of_char > -1 ){
+                printf("%-9s :", arr_tick[i]);
+            }
+            else {
+                printf("%-9s : ", arr_tick[i]);
+            }
+            if (num_of_char > 0) {
+                while (num_of_char >= 1  ) {
+                    printf("%c", "#");
+                    num_of_char--
+                    }
+            }
+            else {
+                while (num_of_char <= -1){
+                    printf("%c", "!");
+                    num_of_char++
+                }
+            }
+            printf("\n");
+        }
+    }'`
+   OUTPUT=`echo "$READ_INPUT" | sort -t ':' -k 2,2 -n | awk '{print $0}'`
+    # Vyriesit problem so zarovnavanim!!!!!
+    echo "$OUTPUT"
+fi
+
+exit 0
+
