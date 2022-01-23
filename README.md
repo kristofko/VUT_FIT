@@ -4,45 +4,42 @@ This is a repository containing all my previous work done during my studies at V
 
 
 ## 1st Semester
-### IZP
-proj1: 13.4/10
+IZP - Simple table formatter : 13.4/10 
 
-proj2: 4.69/10
-### IUS
-proj1: 12.5/24
-### IEL
-proj1: 5.5/12
+IZP - Simple table formatter( Memory management in C ) : 4.69/10
+
+IUS - Cabinet making : 12.5/24
+
+IEL - Semester project 5.5/12
 # 2nd Semester
-## INC
-proj1: unknown - Submitted wrong folder and after resubmitting the right one, Ive only got enough points to earn my right to take the final exam.
-## IOS
-proj1: 14/15
 
-proj2: 15/15
-## IJC
-proj1: 10/15
+INC - VHDL processor : unknown - Submitted wrong folder and after resubmitting the right one, Ive only got enough points to earn my right to take the final exam.
 
-proj2: 14/15
-## IVS
-proj1: 15/18
+IOS - Tradelog tool for cryptotraders in bash : 14/15
 
-proj2: 46/52
+IOS - Process synchronization ( Santa ) : 15/15
+
+IJC - Bit operations, Prime numbers : 10/15
+
+IJC - Static/dynamic libs, Steganographics : 14/15
+
+IVS - Software testing 15/18
+
+IVS - Calculator 46/52
 # 3rd Semester
-## IAL
-proj1: 8/10
 
-proj2: 6.5/10
-## IFJ
-proj1: 11/15
+IAL - Linked lists : 8/10
 
-Defence: 5/5
+IAL - Binary trees : 6.5/10
 
-Documentation: 4/5
+IFJ - Compilator :  11/15
 
-## INP
-proj1: 14/23
+IFJ - Defence: 5/5
 
-proj2: 10/10
+IFJ - Documentation: 4/5
 
-## ISS
-proj1: 18/18
+INP - VHDL processor 14/23
+
+INP - DLX brainf\*ck 10/10
+
+ISS - Processing signals 18/18
