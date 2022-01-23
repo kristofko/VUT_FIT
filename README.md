@@ -3,15 +3,14 @@
 This is a repository containing all my previous work done during my studies at VUT FIT Brno. 
 
 
-# 1st Semester
-## IZP
+### 1st Semester
+#### IZP
 proj1: 13.4/10
 proj2: 4.69/10
-
-## IUS
+#### IUS
 proj1: 12.5/24
 
-## IEL
+#### IEL
 proj1: 5.5/12
 
 # 2nd Semester
