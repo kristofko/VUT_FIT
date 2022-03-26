@@ -10,13 +10,7 @@ DROP TABLE prospect CASCADE CONSTRAINTS ;
 
 -- END OF TABLES DESTRUCTION --
 
-CREATE TABLE employee(
-	"id" INT GENERATED AS IDENTITY NOT NULL PRIMARY KEY,
-	"first_name" VARCHAR(128),
-	"last_name" VARCHAR(128)
-	"mail" VARCHAR(128),
-	"phone" VARCHAR(15)
-);
+
 
 CREATE TABLE artist(
 	"id" INT GENERATED AS IDENTITY NOT NULL PRIMARY KEY,
@@ -33,7 +27,9 @@ CREATE TABLE exposition(
 	"id" INT GENERATED AS IDENTITY NOT NULL PRIMARY KEY,
 	"start_date" DATE,
 	"end_date" DATE,
-	"type" VARCHAR(255)
+	"type" VARCHAR(255),
+	"art_id" INT,
+	CONSTRAINT "exposition_art_fk_id" FOREIGN KEY ("art_id") REFERENCES art("id") 
 );
 
 CREATE TABLE showroom(
@@ -49,12 +45,21 @@ CREATE TABLE showroom(
         ON DELETE SET NULL
 );
 
+CREATE TABLE employee(
+	"id" INT GENERATED AS IDENTITY NOT NULL PRIMARY KEY,
+	"first_name" VARCHAR(128),
+	"last_name" VARCHAR(128),
+	"mail" VARCHAR(128),
+	"phone" VARCHAR(15),
+	"showroom_id" INT,
+	CONSTRAINT "employee_showroom_fk_id" FOREIGN KEY ("showroom_id") REFERENCES showroom("id")
+);
+
 CREATE TABLE prospect(
 	"id" INT GENERATED AS IDENTITY NOT NULL PRIMARY KEY,
-	"first-name" VARCHAR(255),
-	"last-name" VARCHAR(255),
+	"first_name" VARCHAR(255),
+	"last_name" VARCHAR(255),
 	"mail" VARCHAR(255),
-	"paid" VARCHAR(10),
 	"showroom_id" INT,
 	"art_id" INT,
 	"exposition_id" INT,
@@ -67,11 +72,23 @@ CREATE TABLE prospect(
 );
 
 -- TESTING --
-INSERT INTO employee("name", "contact") VALUES('JOHN WICK', 'mailasd');
-INSERT INTO employee("name", "contact") VALUES('RYSANEK', 'xsryasn05@vutbr.cz');
-INSERT INTO employee("name", "contact") VALUES('RYsJAKYBs', 'xsryasn05@vuasdtbr.cz');
-INSERT INTO art("name") VALUES('naked lady');
-INSERT INTO showroom("price", "type", "height", "width", "length", "equipment", "art_id" )
-	VALUES(100, 'normaasl', 120,124,250, 'notg', 1 );
+INSERT INTO art("name", "description") VALUES('naked lady', 'A pic of naked Rysanek');
+INSERT INTO art("name", "description") VALUES('beer', 'Svijany');
 
+INSERT INTO exposition("start_date", "end_date", "type", "art_id")
+	VALUES (TO_DATE('2022-12-22', 'yyyy/mm/dd'), TO_DATE('2022-12-30', 'yyyy/mm/dd'), 'gallery', 1);
+INSERT INTO exposition("start_date", "end_date", "type", "art_id")
+	VALUES (TO_DATE('2022-12-22', 'yyyy/mm/dd'), TO_DATE('2022-12-30', 'yyyy/mm/dd'), 'gallery', 2);
+
+
+INSERT INTO showroom("price", "type", "height", "width", "length", "equipment", "art_id" )
+	VALUES (150, 'Normal', 120, 500, 200, NULL, 1);
+
+INSERT INTO showroom("price", "type", "height", "width", "length", "equipment", "art_id" )
+	VALUES (1300, 'Special', 1250, 150, 2200, NULL, 2);
+
+INSERT INTO prospect("first_name", "last_name", "mail", "showroom_id", "art_id", "exposition_id")
+	VALUES ('Jan', 'Novak', 'novak@mail.com', 1, 1, 1);
+
+ -- INSERT INTO employee("first_name", "last_name", "mail")
 -- END OF TESTING -- 
