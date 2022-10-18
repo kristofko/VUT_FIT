@@ -43,3 +43,13 @@ INP - VHDL processor 14/23
 INP - DLX brainf\*ck 10/10
 
 ISS - Processing signals 18/18
+# 4th  Semester
+
+IDS - Database 43/49
+
+IPK - Server 19/20
+
+IPP - Parser 5.7/7
+
+IPP - Interpret 5.4/13
+
