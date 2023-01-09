@@ -1,0 +1,28 @@
+.TH FLOW 1
+.SH NAME
+flow \- Make and send netflows from captured packets.
+.SH USAGE
+.B ./flow
+[\fB\-f\fR \fIfilename\fR]
+[\fB\-c\fR \fIcollector\fR[:port]]
+[\fB\-a\fR \fIactive_timer\fR]
+[\fB\-i\fR \fIinactive_timer\fR]
+[\fB\-m\fR \fIcount\fR]
+
+.SH OPTIONS
+.TP
+.BR \-f " "  \fR \fIfilename\fR
+Name of analyzed file or stdin
+.TP
+.BR \-c " "  \fR \fInetflow_collector:port\fR
+IP address or hostname of netflow collector, optionally UDP port (127.0.0.1:2055 if not specified)
+.TP
+.BR \-a " "  \fR \fIactive_timer\fR
+Interval in seconds, after its timeout export active flows (60 if not specified)
+.TP
+.BR \-i " "  \fR \fIinactive_timer\fR
+Interval in seconds, after its timeout export inactive flows (10 if not specified)
+.TP
+.BR \-m " "  \fR \fIcount\fR
+In case of reaching max number of flows in cache,
+export the oldest flow to collector (1024 if not specified)
