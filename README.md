@@ -52,4 +52,9 @@ IPK - Server 19/20
 IPP - Parser 5.7/7
 
 IPP - Interpret 5.4/13
+# 5th Semester
+
+IMP - ESP32 Game on I2C Display - 13/14
+
+IMS - Ballistics simulation - 15/20
 
